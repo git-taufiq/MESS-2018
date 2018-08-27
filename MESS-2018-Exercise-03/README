@@ -1,0 +1,88 @@
+STAGE 1
+
+1) compile sem1d:
+./compile.sh
+2) go to run/periodic_test
+cd run/periodic_test
+3) generate the periodic model
+awk -f generate_model.awk > model.dat
+4) visualize the elastic model:
+xmgrace density velocity
+5) run the SEM program
+../../sem1d/bin/sem1D
+6) visualize one displacement snapshot
+xmgrace snapshot020
+7)  visualize one strain snapshot
+xmgrace snapshot_e019
+8) visualize on stress snapshot
+xmgrace snapshot_s019
+
+Conclusion: displacement and stress are smooth and continuous. The seems to propagate in a homogeneous bar. 
+This not the case for the stress
+The question is: can we find an homogeneous 1-D bar for which displacement and strain are the "same"
+as the one in the heterogeneous bar
+
+STAGE 2
+
+Compare with averaged models.
+
+A) the average velocity is 1591.34m/s and density is 1000kg/m3
+1) go to "velocity_av_test" directory
+2) run SEM 
+../../sem1d/bin/sem1D
+3) compare current velocity model with the original one:
+xmgrace  ../periodic_test/velocity velocity
+4) compare displacement snapshots:
+xmgrace ../periodic_test/snapshot020 snapshot020
+
+Conclusion: this does not match! The true model is slower than this average one
+
+B) if we averge the density and the elsatic parameter E, we obtain 
+(E1=1336.3^2*1000=1607151974.4900; E2=1846.37^2*1100=3749990394.5900)
+density: 1000kg/m3
+velocity: 1636.63410221710826 m/s
+1) go to "E_av_test" directory
+2) run SEM 
+../../sem1d/bin/sem1D
+3) compare current velocity model with the original one:
+xmgrace  ../periodic_test/velocity velocity
+4) compare displacement snapshots:
+xmgrace ../periodic_test/snapshot020 snapshot020
+
+Conclusion: this does not match! The true model is still slower than this average one
+
+C) if we average the density and the elastic parameter 1/E (the harmonic average), we obtain (Eav=(2/(1/E1+1/E2)))
+density: 1000kg/m3
+velocity:1500.00
+1) go to "E_harmonic_av_test" directory
+2) run SEM 
+../../sem1d/bin/sem1D
+3) compare current velocity model with the original one:
+xmgrace  ../periodic_test/velocity velocity
+4) compare displacement snapshots:
+xmgrace ../periodic_test/snapshot020 snapshot020
+
+This time they match!
+But if you compare strain:
+xmgrace ../periodic_test/snapshot_e020 snapshot_e020
+we can see that, if the average look good, we are missing the fine scale part.
+So, if a clever average seems to do the job for displacement and stress, it is clearly not enough for strain.
+
+STAGE 3
+
+ The difference between true displacement "u" and effective displacement u* varies with the periodicity of the model.
+In periodic_test2 directory
+1) generate the thinner periodic model:
+awk -f generate_model.awk > model.dat
+You can visualize the velocity model, you will see that the periodicity is twice thinner.
+2) run SEM
+../../sem1d/bin/sem1D
+3) compare displacement snapshots:
+xmgrace ../E_harmonic_av_test/snapshot020 ../periodic_test/snapshot020 snapshot020
+But zooming, you can see that the difference is changing with periodicity: if the periodicity is twice shorter, 
+the amplitude of the difference seems twice lower.
+Looking at the strain:
+xmgrace ../E_harmonic_av_test/snapshot_e020 ../periodic_test/snapshot_e020 snapshot_e020
+things are different: the periodicity of the difference changes with the periodicity of the model, but not its amplitude ...
+
+Homogenization will help to explain all these observation
